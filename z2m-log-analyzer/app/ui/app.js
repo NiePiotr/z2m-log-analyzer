@@ -14,6 +14,12 @@ function fmtTs(ts) {
   return d.toLocaleString();
 }
 
+const BASE = (() => {
+  const p = window.location.pathname;
+  if (p.includes("/api/hassio_ingress/")) return p.replace(/\/$/, "");
+  return "";
+})();
+
 document.addEventListener("alpine:init", () => {
   Alpine.data("app", () => ({
     tab: "overview",
@@ -34,7 +40,7 @@ document.addEventListener("alpine:init", () => {
     },
 
     async api(url) {
-      const r = await fetch(url);
+      const r = await fetch(BASE + "/" + url);
       return r.json();
     },
 
@@ -213,7 +219,7 @@ document.addEventListener("alpine:init", () => {
       if (this.evLevel) params.set("level", this.evLevel);
       if (this.evCategory) params.set("category", this.evCategory);
       if (this.evDevice) params.set("device", this.evDevice);
-      window.location = `api/events/export.csv?${params}`;
+      window.location = BASE + "/api/events/export.csv?" + params;
     },
 
     async loadSettings() {
@@ -225,7 +231,7 @@ document.addEventListener("alpine:init", () => {
 
     async saveSettings() {
       try {
-        const r = await fetch("api/settings", {
+        const r = await fetch(BASE + "/api/settings", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(this.cfg),
