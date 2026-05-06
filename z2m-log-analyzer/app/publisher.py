@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 DISCOVERY_PREFIX = "homeassistant/sensor/z2m_log_analyzer"
 STATE_PREFIX = "zigbee2mqtt_log_analyzer/state"
 
+_WINDOW_MS = {"1m": 60_000, "5m": 300_000, "1h": 3_600_000, "24h": 86_400_000}
+
 
 class Publisher:
     def __init__(self, config: AppConfig, db):
@@ -55,8 +57,9 @@ class Publisher:
             level_map = {"errors": "error", "warnings": "warning", "total": None}
 
             db_level = level_map.get(sensor_level, sensor_level)
+            until_ts = bucket_ts + _WINDOW_MS.get(window, 60_000)
             rows = await self._db.get_aggregate_totals(
-                window, bucket_ts, bucket_ts + 60_000
+                window, bucket_ts, until_ts
             )
             if rows:
                 count = sum(r["count"] for r in rows)

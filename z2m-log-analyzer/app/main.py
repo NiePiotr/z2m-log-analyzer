@@ -152,7 +152,6 @@ async def lifespan(app: FastAPI):
         try:
             active_cfg: AppConfig = load_config()
             cfg = active_cfg
-            logging.basicConfig(level=active_cfg.log_level.upper())
             app.state.config = active_cfg
             app.state.shutdown_event = shutdown_event
             signal_handlers = _register_signal_handlers(shutdown_event)
@@ -233,6 +232,8 @@ async def lifespan(app: FastAPI):
             except Exception:
                 logger.exception("failed to stop MQTT consumer")
 
+        await _cancel_task(event_writer_task, "event writer")
+
         if event_queue is not None:
             try:
                 await asyncio.wait_for(event_queue.join(), timeout=10)
@@ -247,9 +248,8 @@ async def lifespan(app: FastAPI):
             except Exception:
                 logger.exception("failed to stop aggregator")
 
-        await _cancel_task(mqtt_task, "mqtt")
         await _cancel_task(retention_task, "retention")
-        await _cancel_task(event_writer_task, "event writer")
+        await _cancel_task(mqtt_task, "mqtt")
 
         if publisher is not None:
             try:
