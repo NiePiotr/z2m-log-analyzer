@@ -57,10 +57,10 @@ def load_config() -> AppConfig:
         db_max_size_mb=options.get("db_max_size_mb", 500),
         burst_window_minutes=options.get("burst_window_minutes", 5),
         burst_threshold=options.get("burst_threshold", 10),
-        mqtt_host=os.environ.get("MQTTHOST", "localhost"),
-        mqtt_port=int(os.environ.get("MQTTPORT", "1883")),
-        mqtt_user=os.environ.get("MQTTUSER") or None,
-        mqtt_password=os.environ.get("MQTTPASSWORD") or None,
+        mqtt_host=os.environ.get("MQTTHOST") or options.get("mqtt_host", "localhost"),
+        mqtt_port=int(os.environ.get("MQTTPORT") or options.get("mqtt_port", 1883)),
+        mqtt_user=os.environ.get("MQTTUSER") or options.get("mqtt_user") or None,
+        mqtt_password=os.environ.get("MQTTPASSWORD") or options.get("mqtt_password") or None,
     )
 
     logging.getLogger().setLevel(cfg.log_level.upper())

@@ -31,6 +31,10 @@ options:
   db_max_size_mb: 500
   burst_window_minutes: 5
   burst_threshold: 10
+  mqtt_host: localhost
+  mqtt_port: 1883
+  mqtt_user: ""
+  mqtt_password: ""
 schema:
   base_topic: str
   retention_days: int(1,365)
@@ -42,3 +46,7 @@ schema:
   db_max_size_mb: int(10,1000)
   burst_window_minutes: int(1,60)
   burst_threshold: int(1,1000)
+  mqtt_host: str
+  mqtt_port: int
+  mqtt_user: str
+  mqtt_password: str
