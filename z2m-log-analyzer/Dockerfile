@@ -13,4 +13,4 @@ COPY run.sh .
 
 RUN chmod a+x run.sh
 
-CMD [ "/app/run.sh" ]
+CMD [ "/usr/bin/with-contenv", "bashio", "/app/run.sh" ]
