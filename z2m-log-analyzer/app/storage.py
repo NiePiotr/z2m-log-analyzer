@@ -76,6 +76,7 @@ class Database:
             await self._write_conn.commit()
         except Exception:
             logger.exception("Failed to initialize database")
+            raise
 
     async def insert_event(
         self,

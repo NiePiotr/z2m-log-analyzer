@@ -36,6 +36,11 @@ class Publisher:
             logger.info("Publisher started")
         except Exception:
             logger.warning("MQTT unavailable — publisher disabled: %s:%d", self._cfg.mqtt_host, self._cfg.mqtt_port)
+            if self._client:
+                try:
+                    await self._client.__aexit__(None, None, None)
+                except Exception:
+                    pass
             self._client = None
 
     async def stop(self):

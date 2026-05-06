@@ -1,6 +1,6 @@
 import time
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 
 router = APIRouter(prefix="/api/aggregates", tags=["aggregates"])
 
@@ -18,7 +18,7 @@ async def get_aggregates(
     device: str | None = None,
 ):
     if window not in VALID_WINDOWS:
-        return {"error": f"Invalid window: {window}. Use one of {VALID_WINDOWS}"}, 400
+        raise HTTPException(status_code=400, detail=f"Invalid window: {window}. Use one of {VALID_WINDOWS}")
 
     until = until or int(time.time() * 1000)
     db = request.app.state.db
@@ -38,7 +38,7 @@ async def get_aggregate_totals(
     device: str | None = None,
 ):
     if window not in VALID_WINDOWS:
-        return {"error": f"Invalid window: {window}. Use one of {VALID_WINDOWS}"}, 400
+        raise HTTPException(status_code=400, detail=f"Invalid window: {window}. Use one of {VALID_WINDOWS}")
 
     until = until or int(time.time() * 1000)
     db = request.app.state.db

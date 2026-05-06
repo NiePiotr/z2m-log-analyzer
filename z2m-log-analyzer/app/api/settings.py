@@ -2,7 +2,7 @@ import json
 import logging
 import os
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -51,14 +51,17 @@ async def update_settings(request: Request, body: SettingsUpdate):
     try:
         with open(OPTIONS_PATH, "r") as f:
             options = json.load(f)
-    except FileNotFoundError:
+    except (FileNotFoundError, json.JSONDecodeError, PermissionError):
         options = {}
 
     updates = body.model_dump(exclude_none=True)
     options.update(updates)
 
-    with open(OPTIONS_PATH, "w") as f:
-        json.dump(options, f, indent=2)
+    try:
+        with open(OPTIONS_PATH, "w") as f:
+            json.dump(options, f, indent=2)
+    except OSError as e:
+        raise HTTPException(status_code=500, detail=f"Cannot write config: {e}")
 
     cfg = request.app.state.config
     for key, value in updates.items():

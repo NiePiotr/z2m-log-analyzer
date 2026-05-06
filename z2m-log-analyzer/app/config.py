@@ -42,6 +42,9 @@ def _load_options_file() -> dict:
     except FileNotFoundError:
         logger.info("options.json not found — using defaults/env vars")
         return {}
+    except (json.JSONDecodeError, PermissionError, OSError) as e:
+        logger.warning("Cannot read options.json: %s — using defaults", e)
+        return {}
 
 
 def _clean_mqtt_host(host: str) -> str:
