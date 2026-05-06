@@ -153,7 +153,7 @@ class Aggregator:
                     logger.exception("on_update callback failed")
 
             if window_name == "1m":
-                self._check_burst(bucket_ts)
+                await self._check_burst(bucket_ts)
 
         await self._db.set_meta("last_aggregated_ts", str(now_ms))
 
