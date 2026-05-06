@@ -1,0 +1,95 @@
+---
+title: Zigbee2MQTT Log Analyzer
+description: Real-time log analyzer for Zigbee2MQTT — classify, aggregate, and visualize errors to find unstable devices before they fail
+
+panel_icon: mdi:chart-line
+panel_title: Z2M Log Analyzer
+
+sections:
+  - name: Overview
+    icon: mdi:chart-box-outline
+  - name: Setup
+    icon: mdi:cog
+  - name: Usage
+    icon: mdi:monitor-dashboard
+  - name: API
+    icon: mdi:api
+  - name: Troubleshooting
+    icon: mdi:help-circle
+
+overview: |
+  **Z2M Log Analyzer** subscribes to Zigbee2MQTT's MQTT log stream (`zigbee2mqtt/bridge/logging`),
+  classifies every message into one of 13 categories, aggregates them into time windows (1m, 5m, 1h, 24h),
+  and presents interactive charts in a web dashboard.
+
+setup: |
+  ## Prerequisites
+
+  - Home Assistant OS or Supervised installation
+  - Zigbee2MQTT add-on running with MQTT broker configured
+  - The add-on auto-discovers MQTT credentials via Supervisor services
+
+  ## Installation
+
+  1. Add this repository to your Home Assistant add-on store
+  2. Install the **Z2M Log Analyzer** add-on
+  3. Configure options (defaults work out of the box)
+  4. Start the add-on
+
+  After startup, sensors appear automatically in Home Assistant via MQTT Discovery.
+
+usage: |
+  ## Dashboard tabs
+
+  - **Overview** — KPI cards (errors/warnings per hour/day), 24-hour category bar chart
+  - **Timeline** — interactive time-series chart with zoom, category/level/device filters
+  - **Devices** — ranked list of all devices, click to expand with sparkline and breakdown
+  - **Events** — searchable, filterable log table with CSV export
+  - **Settings** — retention period, sensor selection, raw events toggle
+
+  ## Home Assistant automations
+
+  Sensors are exposed as `total_increasing` counters. Example automation:
+
+  ```yaml
+  alias: Alert on spike
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.z2m_failed_to_ping_1h
+      above: 10
+  action:
+    - service: notify.mobile
+      data:
+        message: "Z2M: {{ trigger.to_state.state }} ping failures in the last hour"
+  ```
+
+api: |
+  | Endpoint | Description |
+  |----------|-------------|
+  | `GET /api/events` | Paginated event list with filters |
+  | `GET /api/events/export.csv` | CSV export |
+  | `GET /api/aggregates` | Time-series data per window |
+  | `GET /api/aggregates/totals` | Category totals per window |
+  | `GET /api/devices/ranking` | Top devices by event count |
+  | `GET /api/devices/{name}` | Device detail with sparkline |
+  | `GET /api/settings` | Current configuration |
+  | `POST /api/settings` | Update runtime config |
+  | `GET /api/health` | Liveness, DB size, MQTT status |
+
+troubleshooting: |
+  ### No sensors appearing in HA
+
+  - Check MQTT broker is running and Z2M is publishing logs
+  - Verify `publish_sensors` list in add-on configuration
+  - Restart the add-on to re-publish discovery configs
+
+  ### High CPU usage
+
+  - Reduce log level in Z2M settings (`warning` or `error` instead of `debug`)
+  - Lower retention days to reduce database size
+
+  ### Database too large
+
+  - The add-on automatically prunes events older than `retention_days`
+  - DB size is checked hourly; a warning appears in the Health endpoint
+  - You can manually trigger VACUUM by restarting the add-on

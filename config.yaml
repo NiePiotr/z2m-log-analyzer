@@ -1,0 +1,44 @@
+name: Zigbee2MQTT Log Analyzer
+version: "0.1.0"
+slug: z2m_log_analyzer
+description: Analiza logów Zigbee2MQTT z agregatami i wykresami
+url: https://github.com/piotr/z2m-log-analyzer
+arch:
+  - amd64
+  - aarch64
+  - armv7
+  - armhf
+  - i386
+init: false
+ingress: true
+ingress_port: 8099
+panel_icon: mdi:chart-line
+panel_title: Z2M Log Analyzer
+services:
+  - mqtt:need
+options:
+  base_topic: zigbee2mqtt
+  retention_days: 30
+  enable_raw_events: false
+  raw_events_topic: zigbee2mqtt_log_analyzer/events
+  publish_sensors:
+    - errors_1h
+    - errors_24h
+    - warnings_1h
+    - warnings_24h
+    - failed_to_ping_1h
+  log_level: info
+  db_max_size_mb: 500
+  burst_window_minutes: 5
+  burst_threshold: 10
+schema:
+  base_topic: str
+  retention_days: int(1,365)
+  enable_raw_events: bool
+  raw_events_topic: str
+  publish_sensors:
+    - str
+  log_level: list(debug|info|warning|error)
+  db_max_size_mb: int(10,1000)
+  burst_window_minutes: int(1,60)
+  burst_threshold: int(1,1000)

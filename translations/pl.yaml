@@ -1,0 +1,95 @@
+---
+title: Zigbee2MQTT Log Analyzer
+description: Analizator logów Zigbee2MQTT w czasie rzeczywistym — klasyfikuj, agreguj i wizualizuj błędy, by wykryć problematyczne urządzenia zanim zawiodą
+
+panel_icon: mdi:chart-line
+panel_title: Z2M Log Analyzer
+
+sections:
+  - name: Przegląd
+    icon: mdi:chart-box-outline
+  - name: Instalacja
+    icon: mdi:cog
+  - name: Obsługa
+    icon: mdi:monitor-dashboard
+  - name: API
+    icon: mdi:api
+  - name: Rozwiązywanie problemów
+    icon: mdi:help-circle
+
+overview: |
+  **Z2M Log Analyzer** subskrybuje strumień logów MQTT Zigbee2MQTT (`zigbee2mqtt/bridge/logging`),
+  klasyfikuje każdą wiadomość do jednej z 13 kategorii, agreguje je w okna czasowe (1m, 5m, 1h, 24h)
+  i prezentuje interaktywne wykresy w panelu webowym.
+
+setup: |
+  ## Wymagania
+
+  - Home Assistant OS lub Supervised
+  - Dodatek Zigbee2MQTT z działającym brokerem MQTT
+  - Dane dostępowe do MQTT są automatycznie wstrzykiwane przez Supervisor
+
+  ## Instalacja
+
+  1. Dodaj to repozytorium do sklepu dodatków Home Assistant
+  2. Zainstaluj dodatek **Z2M Log Analyzer**
+  3. Skonfiguruj opcje (domyślne działają od razu)
+  4. Uruchom dodatek
+
+  Po starcie sensory pojawią się automatycznie w Home Assistant przez MQTT Discovery.
+
+usage: |
+  ## Zakładki
+
+  - **Overview** — karty KPI (błędy/ostrzeżenia na godzinę/dzień), wykres słupkowy 24h
+  - **Timeline** — interaktywny wykres liniowy z zoomem, filtrami po kategorii/poziomie/urządzeniu
+  - **Devices** — ranking urządzeń, kliknij by rozwinąć szczegóły z mini-wykresem
+  - **Events** — przeszukiwalna tabela logów z eksportem CSV
+  - **Settings** — okres retencji, wybór sensorów, surowe eventy
+
+  ## Automatyzacje
+
+  Sensory są wystawiane jako liczniki `total_increasing`. Przykład:
+
+  ```yaml
+  alias: Alert przy skoku błędów
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.z2m_failed_to_ping_1h
+      above: 10
+  action:
+    - service: notify.mobile
+      data:
+        message: "Z2M: {{ trigger.to_state.state }} błędów ping w ostatniej godzinie"
+  ```
+
+api: |
+  | Endpoint | Opis |
+  |----------|------|
+  | `GET /api/events` | Stronicowana lista eventów z filtrami |
+  | `GET /api/events/export.csv` | Eksport CSV |
+  | `GET /api/aggregates` | Dane szeregów czasowych per okno |
+  | `GET /api/aggregates/totals` | Sumy per kategoria w oknie |
+  | `GET /api/devices/ranking` | Top urządzenia wg liczby eventów |
+  | `GET /api/devices/{name}` | Szczegóły urządzenia z mini-wykresem |
+  | `GET /api/settings` | Bieżąca konfiguracja |
+  | `POST /api/settings` | Aktualizacja konfiguracji |
+  | `GET /api/health` | Status, rozmiar bazy, stan MQTT |
+
+troubleshooting: |
+  ### Brak sensorów w HA
+
+  - Sprawdź czy broker MQTT działa i Z2M publikuje logi
+  - Zweryfikuj listę `publish_sensors` w konfiguracji dodatku
+  - Zrestartuj dodatek by ponownie wysłać konfiguracje discovery
+
+  ### Wysokie użycie CPU
+
+  - Zmniejsz poziom logowania w Z2M (`warning` lub `error` zamiast `debug`)
+  - Skróć okres retencji by zmniejszyć rozmiar bazy
+
+  ### Baza danych za duża
+
+  - Dodatek automatycznie usuwa eventy starsze niż `retention_days`
+  - Rozmiar bazy jest sprawdzany co godzinę; ostrzeżenie pojawi się w Health
+  - Ręczne VACUUM można wymusić restartem dodatku

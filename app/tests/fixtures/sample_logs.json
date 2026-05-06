@@ -1,0 +1,15 @@
+[
+  {"level": "warning", "message": "Failed to ping 'Kitchen sensor'"},
+  {"level": "error", "message": "Publish 'set' 'state' to 'Hall light' failed: timeout"},
+  {"level": "info", "message": "Device 'Office plug' announced itself"},
+  {"level": "info", "message": "Starting interview of '0x00158d0001a2b3c4'"},
+  {"level": "error", "message": "Interview of 'Garage sensor' failed: Error: Interview failed"},
+  {"level": "info", "message": "Successfully interviewed 'Bedroom dimmer'"},
+  {"level": "info", "message": "Device 'Garden switch' joined"},
+  {"level": "warning", "message": "Device 'Shed contact' left the network"},
+  {"level": "error", "message": "Network error: MAC_INDIRECT_TIMEOUT for 0x00124b0024abcdef"},
+  {"level": "error", "message": "NCP Fatal Error: Reset required"},
+  {"level": "error", "message": "MQTT error: connection refused"},
+  {"level": "info", "message": "OTA update available for 'Living room bulb'"},
+  {"level": "debug", "message": "Zigbee2MQTT started successfully"}
+]

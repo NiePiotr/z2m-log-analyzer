@@ -1,0 +1,6 @@
+fastapi>=0.115,<1
+uvicorn[standard]>=0.32,<1
+aiomqtt>=2.2,<3
+aiosqlite>=0.20,<1
+apscheduler>=3.10,<4
+orjson>=3.10,<4

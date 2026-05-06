@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Z2M Log Analyzer</title>
+<link rel="stylesheet" href="/styles.css">
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.x.x/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.x.x/dist/chartjs-adapter-luxon.min.js"></script>
+</head>
+<body x-data="app" x-init="init()">
+<nav>
+  <button @click="tab='overview'" :class="{active:tab==='overview'}">Overview</button>
+  <button @click="tab='timeline'; initTimeline()" :class="{active:tab==='timeline'}">Timeline</button>
+  <button @click="tab='devices'" :class="{active:tab==='devices'}">Devices</button>
+  <button @click="tab='events'" :class="{active:tab==='events'}">Events</button>
+  <button @click="tab='settings'" :class="{active:tab==='settings'}">Settings</button>
+</nav>
+
+<main>
+  <div x-show="tab==='overview'" x-cloak>
+    <div class="kpi-grid">
+      <div class="card kpi">
+        <div class="value" x-text="kpi.errors1h">-</div>
+        <div class="label">Errors (1h)</div>
+      </div>
+      <div class="card kpi">
+        <div class="value" x-text="kpi.errors24h">-</div>
+        <div class="label">Errors (24h)</div>
+      </div>
+      <div class="card kpi">
+        <div class="value" x-text="kpi.warnings1h">-</div>
+        <div class="label">Warnings (1h)</div>
+      </div>
+      <div class="card kpi">
+        <div class="value" x-text="kpi.warnings24h">-</div>
+        <div class="label">Warnings (24h)</div>
+      </div>
+    </div>
+    <div class="card chart-container">
+      <canvas id="overviewChart"></canvas>
+    </div>
+  </div>
+
+  <div x-show="tab==='timeline'" x-cloak>
+    <div class="filters">
+      <select x-model="tlWindow" @change="initTimeline()">
+        <option value="1m">1 minute</option>
+        <option value="5m">5 minutes</option>
+        <option value="1h">1 hour</option>
+        <option value="24h">24 hours</option>
+      </select>
+      <select x-model="tlCategory" @change="initTimeline()">
+        <option value="">All categories</option>
+      </select>
+      <select x-model="tlLevel" @change="initTimeline()">
+        <option value="">All levels</option>
+        <option value="error">Error</option>
+        <option value="warning">Warning</option>
+        <option value="info">Info</option>
+        <option value="debug">Debug</option>
+      </select>
+      <select x-model="tlRange" @change="initTimeline()">
+        <option value="1h">Last hour</option>
+        <option value="6h">Last 6 hours</option>
+        <option value="24h">Last 24 hours</option>
+        <option value="7d">Last 7 days</option>
+        <option value="30d">Last 30 days</option>
+      </select>
+    </div>
+    <div class="card chart-container">
+      <canvas id="timelineChart"></canvas>
+    </div>
+  </div>
+
+  <div x-show="tab==='devices'" x-cloak>
+    <div class="filters">
+      <select x-model="devRange" @change="loadDevices()">
+        <option value="1h">Last hour</option>
+        <option value="24h" selected>Last 24 hours</option>
+        <option value="7d">Last 7 days</option>
+        <option value="30d">Last 30 days</option>
+      </select>
+      <input type="text" placeholder="Filter devices..." x-model="devFilter">
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:30px"></th>
+            <th @click="devSort='device'">Device</th>
+            <th @click="devSort='total'">Total</th>
+            <th>Top categories</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="(d, i) in filteredDevices" :key="d.device">
+            <tr>
+              <td colspan="4" style="padding:0">
+                <table style="width:100%;margin:0">
+                  <tr @click="toggleDevice(d.device)" style="cursor:pointer">
+                    <td style="width:30px" x-text="expandedDevice===d.device ? '▾' : '▸'"></td>
+                    <td x-text="d.device"></td>
+                    <td><span class="badge badge-error" x-text="d.total"></span></td>
+                    <td style="font-size:11px;color:var(--text-muted)">
+                      <template x-for="(cnt, cat) in Object.entries(d.categories||{}).slice(0,3)" :key="cat">
+                        <span style="margin-right:8px" x-text="cat+':'+cnt"></span>
+                      </template>
+                    </td>
+                  </tr>
+                </table>
+                <div x-show="expandedDevice===d.device" x-transition style="padding:12px 16px;background:var(--bg);border-top:1px solid var(--border)">
+                  <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px">
+                    <div class="card" style="flex:1;min-width:120px;text-align:center">
+                      <div style="font-size:24px;font-weight:700;color:var(--accent)" x-text="deviceDetail.total||'-'"></div>
+                      <div style="font-size:11px;color:var(--text-muted)">Total events</div>
+                    </div>
+                    <div class="card" style="flex:1;min-width:120px;text-align:center">
+                      <div style="font-size:14px;font-weight:600" x-text="deviceDetail.last_seen ? fmtTs(deviceDetail.last_seen) : '-'"></div>
+                      <div style="font-size:11px;color:var(--text-muted)">Last seen</div>
+                    </div>
+                  </div>
+                  <div class="chart-container">
+                    <canvas :id="'spark-'+d.device.replace(/[^a-z0-9]/gi,'_')"></canvas>
+                  </div>
+                  <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin-top:8px">
+                    <div><strong>Categories:</strong> <template x-for="(cnt, cat) in deviceDetail.categories||{}" :key="cat"><span class="badge" style="margin:2px" x-text="cat+': '+cnt"></span></template></div>
+                    <div><strong>Levels:</strong> <template x-for="(cnt, lvl) in deviceDetail.levels||{}" :key="lvl"><span :class="'badge badge-'+lvl" style="margin:2px" x-text="lvl+': '+cnt"></span></template></div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div x-show="tab==='events'" x-cloak>
+    <div class="filters">
+      <select x-model="evLevel" @change="loadEvents()">
+        <option value="">All levels</option>
+        <option value="error">Error</option>
+        <option value="warning">Warning</option>
+        <option value="info">Info</option>
+        <option value="debug">Debug</option>
+      </select>
+      <select x-model="evCategory" @change="loadEvents()">
+        <option value="">All categories</option>
+      </select>
+      <input type="text" placeholder="Device..." x-model="evDevice" @keyup.enter="loadEvents()">
+      <button class="secondary" @click="exportCsv()">Export CSV</button>
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Level</th>
+            <th>Category</th>
+            <th>Device</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="e in events" :key="e.id">
+            <tr>
+              <td x-text="fmtTs(e.ts)" style="white-space:nowrap"></td>
+              <td><span :class="'badge badge-'+e.level" x-text="e.level"></span></td>
+              <td x-text="e.category"></td>
+              <td x-text="e.device||'-'"></td>
+              <td style="max-width:400px;overflow:hidden;text-overflow:ellipsis" x-text="e.raw_message"></td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+      <div class="pagination">
+        <button :disabled="evOffset===0" @click="evOffset-=evLimit; loadEvents()">Previous</button>
+        <span x-text="'Page '+(evOffset/evLimit+1)"></span>
+        <button :disabled="events.length<evLimit" @click="evOffset+=evLimit; loadEvents()">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <div x-show="tab==='settings'" x-cloak>
+    <div class="card">
+      <div class="form-group">
+        <label>Retention (days)</label>
+        <input type="number" x-model="cfg.retention_days" min="1" max="365">
+      </div>
+      <div class="form-group">
+        <label><input type="checkbox" x-model="cfg.enable_raw_events"> Raw events topic</label>
+      </div>
+      <div class="form-group" x-show="cfg.enable_raw_events">
+        <label>Raw events topic</label>
+        <input type="text" x-model="cfg.raw_events_topic">
+      </div>
+      <div class="form-group">
+        <label>Published sensors</label>
+        <template x-for="s in availableSensors" :key="s">
+          <label style="display:block;font-weight:400">
+            <input type="checkbox" :value="s" x-model="cfg.publish_sensors"> <span x-text="s"></span>
+          </label>
+        </template>
+      </div>
+      <div class="form-group" style="display:flex;gap:12px;align-items:center">
+        <span>DB size: <strong x-text="cfg.db_size_mb+' MB'"></strong></span>
+        <span x-show="cfg.db_over_limit" style="color:var(--danger)">⚠ Over limit</span>
+        <span x-text="cfg.mqtt_connected ? '🟢 MQTT' : '🔴 MQTT'" style="margin-left:auto"></span>
+      </div>
+      <button @click="saveSettings()">Save</button>
+    </div>
+  </div>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+# Lovelace dashboard preset for Z2M Log Analyzer
+# Copy this YAML into a new Lovelace dashboard (raw config editor)
+
+title: Zigbee Diagnostics
+views:
+  - title: Overview
+    path: overview
+    icon: mdi:chart-line
+    cards:
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: sensor.z2m_errors_1h
+            name: Errors (1h)
+            icon: mdi:alert-circle
+          - type: entity
+            entity: sensor.z2m_errors_24h
+            name: Errors (24h)
+            icon: mdi:alert-octagon
+          - type: entity
+            entity: sensor.z2m_warnings_1h
+            name: Warnings (1h)
+            icon: mdi:alert
+          - type: entity
+            entity: sensor.z2m_warnings_24h
+            name: Warnings (24h)
+            icon: mdi:alert-outline
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: sensor.z2m_failed_to_ping_1h
+            name: Ping failures (1h)
+            icon: mdi:lan-disconnect
+      - type: iframe
+        url: /hassio/ingress/z2m_log_analyzer
+        aspect_ratio: 75%
+        title: Z2M Log Analyzer
+
+  - title: Sensors
+    path: sensors
+    icon: mdi:chip
+    cards:
+      - type: entities
+        title: Z2M Diagnostics
+        entities:
+          - entity: sensor.z2m_errors_1h
+          - entity: sensor.z2m_errors_24h
+          - entity: sensor.z2m_warnings_1h
+          - entity: sensor.z2m_warnings_24h
+          - entity: sensor.z2m_failed_to_ping_1h
+      - type: history-graph
+        title: Errors & Warnings (24h)
+        hours_to_show: 24
+        entities:
+          - entity: sensor.z2m_errors_1h
+          - entity: sensor.z2m_warnings_1h
