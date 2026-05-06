@@ -158,7 +158,7 @@ document.addEventListener("alpine:init", () => {
       this.expandedDevice = name;
       const now = Date.now();
       const since = now - rangeSeconds(this.devRange);
-      const detail = await this.api(`api/devices/${encodeURIComponent(name)}?since=${since}&until=${now}`);
+      const detail = await this.api(`api/devices/detail?device=${encodeURIComponent(name)}&since=${since}&until=${now}`);
       this.deviceDetail = detail;
       this.$nextTick(() => this.renderSparkline(name, detail.sparkline || []));
     },

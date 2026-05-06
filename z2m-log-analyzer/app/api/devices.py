@@ -18,14 +18,14 @@ async def get_device_ranking(
     return {"devices": devices}
 
 
-@router.get("/{device_name}")
+@router.get("/detail")
 async def get_device_detail(
     request: Request,
-    device_name: str,
+    device: str = Query(..., description="Device name"),
     since: int = Query(..., description="Unix timestamp ms"),
     until: int | None = Query(None),
 ):
     until = until or int(time.time() * 1000)
     db = request.app.state.db
-    detail = await db.get_device_detail(device_name, since, until)
+    detail = await db.get_device_detail(device, since, until)
     return detail
