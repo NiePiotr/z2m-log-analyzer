@@ -22,15 +22,19 @@ class Publisher:
         self._aggregator = aggregator
 
     async def start(self):
-        self._client = aiomqtt.Client(
-            hostname=self._cfg.mqtt_host,
-            port=self._cfg.mqtt_port,
-            username=self._cfg.mqtt_user,
-            password=self._cfg.mqtt_password,
-        )
-        await self._client.__aenter__()
-        await self._publish_discovery()
-        logger.info("Publisher started — discovery configs sent")
+        try:
+            self._client = aiomqtt.Client(
+                hostname=self._cfg.mqtt_host,
+                port=self._cfg.mqtt_port,
+                username=self._cfg.mqtt_user,
+                password=self._cfg.mqtt_password,
+            )
+            await self._client.__aenter__()
+            await self._publish_discovery()
+            logger.info("Publisher started")
+        except Exception:
+            logger.warning("MQTT unavailable — publisher disabled: %s:%d", self._cfg.mqtt_host, self._cfg.mqtt_port)
+            self._client = None
 
     async def stop(self):
         if self._client:
