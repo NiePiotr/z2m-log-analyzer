@@ -52,7 +52,10 @@ def load_config() -> AppConfig:
         retention_days=options.get("retention_days", 30),
         enable_raw_events=options.get("enable_raw_events", False),
         raw_events_topic=options.get("raw_events_topic", "zigbee2mqtt_log_analyzer/events"),
-        publish_sensors=options.get("publish_sensors", AppConfig.publish_sensors),
+        publish_sensors=options.get("publish_sensors", [
+            "errors_1h", "errors_24h", "warnings_1h", "warnings_24h",
+            "failed_to_ping_1h",
+        ]),
         log_level=options.get("log_level", "info"),
         db_max_size_mb=options.get("db_max_size_mb", 500),
         burst_window_minutes=options.get("burst_window_minutes", 5),
