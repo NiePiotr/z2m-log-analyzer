@@ -123,9 +123,12 @@ document.addEventListener("alpine:init", () => {
           plugins: { legend: { position: "bottom", labels: { color: "#8892a4" } } },
           scales: {
             x: {
-              type: "time",
-              time: { unit: "minute" },
-              ticks: { color: "#8892a4" },
+              type: "linear",
+              ticks: {
+                color: "#8892a4",
+                maxTicksLimit: 8,
+                callback: v => new Date(v).toLocaleTimeString(),
+              },
               grid: { color: "#2a3a5c" },
             },
             y: { ticks: { color: "#8892a4" }, grid: { color: "#2a3a5c" } },
@@ -179,7 +182,7 @@ document.addEventListener("alpine:init", () => {
           animation: false,
           plugins: { legend: { display: false } },
           scales: {
-            x: { type: "time", time: { unit: "hour" }, ticks: { color: "#8892a4", maxTicksLimit: 6 }, grid: { color: "#2a3a5c" } },
+            x: { type: "linear", ticks: { color: "#8892a4", maxTicksLimit: 6, callback: v => new Date(v).toLocaleTimeString() }, grid: { color: "#2a3a5c" } },
             y: { ticks: { color: "#8892a4" }, grid: { color: "#2a3a5c" }, min: 0 },
           },
         },
