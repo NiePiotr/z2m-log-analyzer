@@ -42,16 +42,16 @@ document.addEventListener("alpine:init", () => {
       try {
         const now = Date.now();
         const [d1h, d24h] = await Promise.all([
-          this.api(`/api/aggregates/totals?window=1h&since=${now - 3600000}&until=${now}`),
-          this.api(`/api/aggregates/totals?window=1h&since=${now - 86400000}&until=${now}`),
+          this.api(`api/aggregates/totals?window=1h&since=${now - 3600000}&until=${now}`),
+          this.api(`api/aggregates/totals?window=1h&since=${now - 86400000}&until=${now}`),
         ]);
         const sum = (data, level) => data.filter(r => level === "error" ? r.category !== "unknown" : true)
           .reduce((s, r) => s + r.count, 0);
         this.kpi.errors1h = d1h.data ? sum(d1h.data, "error") : 0;
         this.kpi.errors24h = d24h.data ? sum(d24h.data, "error") : 0;
 
-        const w1h = await this.api(`/api/aggregates/totals?window=1h&since=${now - 3600000}&until=${now}`);
-        const w24h = await this.api(`/api/aggregates/totals?window=1h&since=${now - 86400000}&until=${now}`);
+        const w1h = await this.api(`api/aggregates/totals?window=1h&since=${now - 3600000}&until=${now}`);
+        const w24h = await this.api(`api/aggregates/totals?window=1h&since=${now - 86400000}&until=${now}`);
 
         this.renderOverviewChart(d24h.data || []);
         this.renderOverviewChart(d24h.data || []);
@@ -93,7 +93,7 @@ document.addEventListener("alpine:init", () => {
       if (this.tlCategory) params.set("category", this.tlCategory);
       if (this.tlLevel) params.set("level", this.tlLevel);
 
-      const resp = await this.api(`/api/aggregates?${params}`);
+      const resp = await this.api(`api/aggregates?${params}`);
       this.renderTimelineChart(resp.data || []);
     },
 
@@ -140,7 +140,7 @@ document.addEventListener("alpine:init", () => {
     async loadDevices() {
       const now = Date.now();
       const since = now - rangeSeconds(this.devRange);
-      const resp = await this.api(`/api/devices/ranking?since=${since}&until=${now}&limit=100`);
+      const resp = await this.api(`api/devices/ranking?since=${since}&until=${now}&limit=100`);
       this.devices = resp.devices || [];
     },
 
@@ -152,7 +152,7 @@ document.addEventListener("alpine:init", () => {
       this.expandedDevice = name;
       const now = Date.now();
       const since = now - rangeSeconds(this.devRange);
-      const detail = await this.api(`/api/devices/${encodeURIComponent(name)}?since=${since}&until=${now}`);
+      const detail = await this.api(`api/devices/${encodeURIComponent(name)}?since=${since}&until=${now}`);
       this.deviceDetail = detail;
       this.$nextTick(() => this.renderSparkline(name, detail.sparkline || []));
     },
@@ -204,7 +204,7 @@ document.addEventListener("alpine:init", () => {
       if (this.evLevel) params.set("level", this.evLevel);
       if (this.evCategory) params.set("category", this.evCategory);
       if (this.evDevice) params.set("device", this.evDevice);
-      const resp = await this.api(`/api/events?${params}`);
+      const resp = await this.api(`api/events?${params}`);
       this.events = resp.events || [];
     },
 
@@ -213,19 +213,19 @@ document.addEventListener("alpine:init", () => {
       if (this.evLevel) params.set("level", this.evLevel);
       if (this.evCategory) params.set("category", this.evCategory);
       if (this.evDevice) params.set("device", this.evDevice);
-      window.location = `/api/events/export.csv?${params}`;
+      window.location = `api/events/export.csv?${params}`;
     },
 
     async loadSettings() {
       try {
-        const resp = await this.api("/api/settings");
+        const resp = await this.api("api/settings");
         Object.assign(this.cfg, resp);
       } catch (e) { }
     },
 
     async saveSettings() {
       try {
-        const r = await fetch("/api/settings", {
+        const r = await fetch("api/settings", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(this.cfg),
