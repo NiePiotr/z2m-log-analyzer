@@ -44,6 +44,13 @@ def _load_options_file() -> dict:
         return {}
 
 
+def _clean_mqtt_host(host: str) -> str:
+    for prefix in ("mqtt://", "tcp://", "ssl://", "ws://", "wss://"):
+        if host.startswith(prefix):
+            return host[len(prefix):]
+    return host
+
+
 def load_config() -> AppConfig:
     options = _load_options_file()
 
@@ -60,7 +67,9 @@ def load_config() -> AppConfig:
         db_max_size_mb=options.get("db_max_size_mb", 500),
         burst_window_minutes=options.get("burst_window_minutes", 5),
         burst_threshold=options.get("burst_threshold", 10),
-        mqtt_host=os.environ.get("MQTTHOST") or options.get("mqtt_host", "localhost"),
+        mqtt_host=_clean_mqtt_host(
+            os.environ.get("MQTTHOST") or options.get("mqtt_host", "localhost")
+        ),
         mqtt_port=int(os.environ.get("MQTTPORT") or options.get("mqtt_port", 1883)),
         mqtt_user=os.environ.get("MQTTUSER") or options.get("mqtt_user") or None,
         mqtt_password=os.environ.get("MQTTPASSWORD") or options.get("mqtt_password") or None,

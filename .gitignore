@@ -9,3 +9,5 @@ dist/
 build/
 .idea/
 .vscode/
+.sisyphus/
+Gemini_Generated_Image_*
