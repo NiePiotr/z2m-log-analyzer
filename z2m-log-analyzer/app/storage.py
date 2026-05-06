@@ -106,6 +106,7 @@ class Database:
     async def get_events(
         self,
         since_ts: int | None = None,
+        until_ts: int | None = None,
         level: str | None = None,
         category: str | None = None,
         device: str | None = None,
@@ -113,7 +114,7 @@ class Database:
         offset: int = 0,
     ) -> list[dict[str, Any]]:
         try:
-            where, params = self._build_filters(since_ts, level, category, device)
+            where, params = self._build_filters(since_ts, until_ts, level, category, device)
             params.extend((limit, offset))
             query = f"""
                 SELECT id, ts, level, category, device, raw_message, meta
@@ -130,12 +131,13 @@ class Database:
     async def get_event_count(
         self,
         since_ts: int | None = None,
+        until_ts: int | None = None,
         level: str | None = None,
         category: str | None = None,
         device: str | None = None,
     ) -> int:
         try:
-            where, params = self._build_filters(since_ts, level, category, device)
+            where, params = self._build_filters(since_ts, until_ts, level, category, device)
             rows = await self.fetch_all(f"SELECT COUNT(*) AS count FROM events {where}", params)
             return int(rows[0]["count"]) if rows else 0
         except Exception:
@@ -427,6 +429,7 @@ class Database:
     def _build_filters(
         self,
         since_ts: int | None,
+        until_ts: int | None,
         level: str | None,
         category: str | None,
         device: str | None,
@@ -436,6 +439,9 @@ class Database:
         if since_ts is not None:
             where.append("ts >= ?")
             params.append(since_ts)
+        if until_ts is not None:
+            where.append("ts <= ?")
+            params.append(until_ts)
         self._append_optional_filters(where, params, level, category, device)
         return (f"WHERE {' AND '.join(where)}" if where else "", params)
 

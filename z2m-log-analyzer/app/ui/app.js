@@ -41,6 +41,7 @@ document.addEventListener("alpine:init", () => {
 
     async api(url) {
       const r = await fetch(BASE + "/" + url);
+      if (!r.ok) throw new Error(`HTTP ${r.status}: ${await r.text()}`);
       return r.json();
     },
 
